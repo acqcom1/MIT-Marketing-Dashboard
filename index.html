@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FY26 Marketing Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #ffffff; color: #1a1a18; padding: 2rem; }
+.page { max-width: 960px; margin: 0 auto; }
+.page-title { font-size: 18px; font-weight: 500; color: #1a1a18; margin-bottom: 4px; }
+.page-sub { font-size: 12px; color: #888780; margin-bottom: 1.5rem; }
+.section-label { font-size: 11px; font-weight: 500; color: #888780; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+.kpi { background: #f0f2f8; border-radius: 8px; padding: 12px 14px; }
+.kpi-label { font-size: 11px; color: #5f5e5a; margin-bottom: 4px; }
+.kpi-value { font-size: 22px; font-weight: 500; color: #1a1a18; line-height: 1.1; }
+.kpi-sub { font-size: 10px; color: #888780; margin-top: 3px; }
+.kpi-pct { font-size: 11px; font-weight: 500; margin-top: 3px; }
+.pct-behind { color: #A32D2D; }
+.pct-ahead { color: #3B6D11; }
+.pct-neutral { color: #5f5e5a; }
+.pace-bar-wrap { background: #fff; border: 0.5px solid rgba(0,0,0,0.12); border-radius: 8px; padding: 14px 16px; margin-bottom: 1.5rem; }
+.pace-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.pace-label { width: 130px; color: #5f5e5a; flex-shrink: 0; font-size: 11px; }
+.pace-track { flex: 1; height: 8px; background: #e6eaf4; border-radius: 4px; position: relative; overflow: visible; }
+.pace-fill { height: 100%; border-radius: 4px; }
+.pace-marker { position: absolute; top: -3px; width: 2px; height: 14px; background: #888780; border-radius: 1px; }
+.pace-pct { width: 36px; text-align: right; font-weight: 500; font-size: 11px; }
+.divider { border: none; border-top: 0.5px solid rgba(0,0,0,0.12); margin: 1.25rem 0; }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 1rem; }
+.tab { font-size: 11px; padding: 7px 8px; border-radius: 8px; border: 1px solid #003087; background: #ffffff; color: #003087; cursor: pointer; text-align: center; line-height: 1.3; font-weight: 400; }
+.tab:hover { background: #e6eaf4; }
+.tab.active { background: #003087; color: #ffffff; font-weight: 500; border-color: #003087; }
+.panel { display: none; }
+.panel.active { display: block; }
+.legend-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; font-size: 11px; color: #5f5e5a; }
+.legend-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 4px; vertical-align: middle; flex-shrink: 0; }
+.scroll-x { overflow-x: auto; width: 100%; }
+.data-table { border-collapse: collapse; font-size: 11px; min-width: 580px; width: 100%; }
+.data-table th { font-size: 10px; color: #888780; font-weight: 400; text-align: right; padding: 6px 8px; border-bottom: 0.5px solid rgba(0,0,0,0.12); white-space: nowrap; }
+.data-table th:first-child { text-align: left; }
+.data-table td { padding: 8px 8px; border-bottom: 0.5px solid rgba(0,0,0,0.08); text-align: right; color: #1a1a18; white-space: nowrap; font-size: 11px; }
+.data-table td:first-child { text-align: left; color: #5f5e5a; }
+.data-table .total-row td { font-weight: 500; background: #f0f2f8; }
+.data-table .na { color: #b4b2a9; }
+.toggles-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.toggle-btn { font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 0.5px solid rgba(0,0,0,0.15); cursor: pointer; background: transparent; color: #5f5e5a; }
+.toggle-btn:hover { background: #e6eaf4; }
+.toggle-btn.on { font-weight: 500; }
+.controls-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.controls-row label { font-size: 11px; color: #5f5e5a; white-space: nowrap; }
+.controls-row select { font-size: 11px; padding: 5px 8px; border-radius: 8px; border: 0.5px solid rgba(0,0,0,0.15); background: #f0f2f8; color: #1a1a18; cursor: pointer; }
+.sub-divider { border: none; border-top: 0.5px solid rgba(0,0,0,0.1); margin: 1.25rem 0; }
+.sub-label { font-size: 11px; font-weight: 500; color: #5f5e5a; margin-bottom: 8px; }
+@media (max-width: 600px) {
+  body { padding: 1rem; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .tabs { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="page-title">FY26 Marketing Dashboard</div>
+<div class="page-sub">YTD through April 2026 &nbsp;·&nbsp; Fiscal year Sep '25 – Aug '26</div>
+
+<div class="section-label">YTD summary</div>
+<div class="kpi-grid">
+  <div class="kpi"><div class="kpi-label">Total spend</div><div class="kpi-value">$5.99M</div><div class="kpi-sub">Goal $13.03M</div><div class="kpi-pct pct-behind">46% to goal</div></div>
+  <div class="kpi"><div class="kpi-label">Certs issued</div><div class="kpi-value">24,074</div><div class="kpi-sub">Goal 36,525</div><div class="kpi-pct pct-behind">66% to goal</div></div>
+  <div class="kpi"><div class="kpi-label">1yr gross premium</div><div class="kpi-value">$2.46M</div><div class="kpi-sub">Goal $4.37M</div><div class="kpi-pct pct-behind">56% to goal</div></div>
+  <div class="kpi"><div class="kpi-label">CPA</div><div class="kpi-value">$249</div><div class="kpi-sub">Spend / certs issued · Goal $357</div><div class="kpi-pct pct-neutral">—</div></div>
+  <div class="kpi"><div class="kpi-label">AAP</div><div class="kpi-value">$102</div><div class="kpi-sub">Gross prem / certs · Goal $120</div><div class="kpi-pct pct-neutral">—</div></div>
+  <div class="kpi"><div class="kpi-label">Pay rate</div><div class="kpi-value">58%</div><div class="kpi-sub">Certs / applications · 24,074 / 41,476</div><div class="kpi-pct pct-neutral">—</div></div>
+</div>
+
+<div class="pace-bar-wrap">
+  <div class="section-label" style="margin-bottom:12px;">Goal pacing — % achieved vs 67% fiscal year elapsed</div>
+  <div class="pace-row"><div class="pace-label">Certs issued</div><div class="pace-track"><div class="pace-fill" style="width:66%;background:#3266ad;"></div><div class="pace-marker" style="left:67%;"></div></div><div class="pace-pct pct-behind">66%</div></div>
+  <div class="pace-row"><div class="pace-label">1yr gross premium</div><div class="pace-track"><div class="pace-fill" style="width:56%;background:#3266ad;"></div><div class="pace-marker" style="left:67%;"></div></div><div class="pace-pct pct-behind">56%</div></div>
+  <div class="pace-row"><div class="pace-label">Spend</div><div class="pace-track"><div class="pace-fill" style="width:46%;background:#3266ad;"></div><div class="pace-marker" style="left:67%;"></div></div><div class="pace-pct pct-behind">46%</div></div>
+  <div class="pace-row"><div class="pace-label">CPA efficiency</div><div class="pace-track"><div class="pace-fill" style="width:70%;background:#3B6D11;"></div><div class="pace-marker" style="left:67%;"></div></div><div class="pace-pct pct-ahead">70%</div></div>
+  <div style="font-size:10px;color:#888780;margin-top:6px;">Vertical bar = 67% fiscal year elapsed. Bars left of marker are behind pace.</div>
+</div>
+
+<hr class="divider">
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('product',this)">By product</button>
+  <button class="tab" onclick="switchTab('channel',this)">By channel</button>
+  <button class="tab" onclick="switchTab('monthly',this)">Monthly — overall</button>
+  <button class="tab" onclick="switchTab('prodtrend',this)">Monthly — by product</button>
+</div>
+
+<!-- BY PRODUCT -->
+<div id="panel-product" class="panel active">
+  <div class="legend-row">
+    <span><span class="legend-swatch" style="background:#3266ad;"></span>Spend ($K)</span>
+    <span><span class="legend-swatch" style="background:#1D9E75;"></span>1yr gross prem ($K)</span>
+  </div>
+  <div class="scroll-x">
+    <div style="position:relative;height:220px;min-width:480px;">
+      <canvas id="prodChart" role="img" aria-label="Grouped bar chart of spend vs gross premium by product"></canvas>
+    </div>
+  </div>
+  <div class="scroll-x" style="margin-top:1rem;">
+    <table class="data-table">
+      <thead><tr><th>Product</th><th>Spend</th><th>Apps</th><th>Certs</th><th>Pay rate</th><th>Gross prem</th><th>CPA</th><th>AAP</th></tr></thead>
+      <tbody>
+        <tr><td>AI</td><td>$400,000</td><td>3</td><td>2</td><td>67%</td><td>$200</td><td>$200,000</td><td>$100</td></tr>
+        <tr><td>AD&amp;D</td><td>$250,000</td><td>22,281</td><td>15,769</td><td>71%</td><td>$628,795</td><td>$16</td><td>$40</td></tr>
+        <tr><td>GTL</td><td>$300,000</td><td>10,847</td><td>4,747</td><td>44%</td><td>$771,291</td><td>$63</td><td>$163</td></tr>
+        <tr><td>GIL</td><td>$500,000</td><td>5,266</td><td>2,777</td><td>53%</td><td>$730,695</td><td>$180</td><td>$263</td></tr>
+        <tr><td>Level premium</td><td>$900,000</td><td>2,766</td><td>779</td><td>28%</td><td>$324,325</td><td>$1,155</td><td>$416</td></tr>
+        <tr class="total-row"><td>Total</td><td>$2,350,000</td><td>41,163</td><td>24,074</td><td>58%</td><td>$2,455,306</td><td>$98</td><td>$102</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- BY CHANNEL -->
+<div id="panel-channel" class="panel">
+  <div class="legend-row">
+    <span><span class="legend-swatch" style="background:#3266ad;"></span>Applications</span>
+    <span><span class="legend-swatch" style="background:#1D9E75;"></span>Certs issued</span>
+    <span><span class="legend-swatch" style="background:#BA7517;"></span>Gross prem ($K)</span>
+  </div>
+  <div class="scroll-x">
+    <div style="position:relative;height:160px;min-width:400px;">
+      <canvas id="channelChart" role="img" aria-label="Horizontal grouped bar chart comparing channels"></canvas>
+    </div>
+  </div>
+  <div class="scroll-x" style="margin-top:1rem;">
+    <table class="data-table">
+      <thead><tr><th>Channel</th><th>Spend</th><th>Apps</th><th>Certs</th><th>Pay rate</th><th>Gross prem</th><th>CPA</th><th>AAP</th></tr></thead>
+      <tbody>
+        <tr><td>Acquisition (DM)</td><td>—</td><td>21,214</td><td>12,932</td><td>61%</td><td>$904,177</td><td>$70</td><td>$70</td></tr>
+        <tr><td>Xsell (Pearl)</td><td>—</td><td>20,262</td><td>11,142</td><td>55%</td><td>$1,551,130</td><td>$139</td><td>$139</td></tr>
+        <tr><td class="na">Organic / Digital</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td></tr>
+        <tr class="total-row"><td>Total</td><td>$2,350,000</td><td>41,476</td><td>24,074</td><td>58%</td><td>$2,455,307</td><td>$98</td><td>$102</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MONTHLY OVERALL -->
+<div id="panel-monthly" class="panel">
+  <div class="toggles-row" id="kpiToggles"></div>
+  <div class="scroll-x">
+    <div style="position:relative;height:260px;min-width:500px;">
+      <canvas id="monthlyChart" role="img" aria-label="Multi-line monthly trend chart for selected KPIs across FY26"></canvas>
+    </div>
+  </div>
+  <hr class="sub-divider">
+  <div class="sub-label">Monthly detail</div>
+  <div class="scroll-x">
+    <table class="data-table" style="min-width:780px;">
+      <thead><tr><th>Month</th><th>Spend ($K)</th><th>Apps</th><th>Certs</th><th>Pay rate</th><th>Gross prem ($K)</th><th>CPA ($)</th><th>AAP ($)</th></tr></thead>
+      <tbody id="monthlyTableBody"></tbody>
+    </table>
+  </div>
+  <div style="font-size:10px;color:#888780;margin-top:8px;">Dummy data used for illustration. Replace with actuals. CPA = spend / certs. AAP = gross prem / certs. Pay rate = certs / applications.</div>
+</div>
+
+<!-- MONTHLY BY PRODUCT -->
+<div id="panel-prodtrend" class="panel">
+  <div class="controls-row">
+    <label>KPI</label>
+    <select id="prodTrendKpi" onchange="renderProdTrend()">
+      <option value="certs">Certs issued</option>
+      <option value="apps">Applications</option>
+      <option value="spend">Spend ($K)</option>
+      <option value="prem">Gross prem ($K)</option>
+      <option value="cpa">CPA ($)</option>
+      <option value="aap">AAP ($)</option>
+      <option value="payrate">Pay rate (%)</option>
+    </select>
+    <label>View</label>
+    <select id="prodTrendMode" onchange="renderProdTrend()">
+      <option value="compare">All products</option>
+      <option value="ADD">AD&amp;D only</option>
+      <option value="GTL">GTL only</option>
+      <option value="GIL">GIL only</option>
+      <option value="LPGT">Level premium only</option>
+      <option value="AI">AI only</option>
+    </select>
+  </div>
+  <div id="prodLegend" class="legend-row"></div>
+  <div class="scroll-x">
+    <div style="position:relative;height:280px;min-width:500px;">
+      <canvas id="prodTrendChart" role="img" aria-label="Monthly trend by product for selected KPI"></canvas>
+    </div>
+  </div>
+  <hr class="sub-divider">
+  <div class="sub-label" id="prodTrendTableLabel">Monthly detail — all products</div>
+  <div class="scroll-x">
+    <table class="data-table" style="min-width:700px;">
+      <thead id="prodTrendTableHead"></thead>
+      <tbody id="prodTrendTableBody"></tbody>
+    </table>
+  </div>
+  <div style="font-size:10px;color:#888780;margin-top:8px;">Dummy data used for illustration. Switch KPI or product using the selectors above.</div>
+</div>
+
+</div><!-- end .page -->
+
+<script>
+var channelDrawn = false;
+var monthlyInited = false;
+var monthlyChart = null;
+var prodTrendChart = null;
+
+var months = ["Sep '25","Oct '25","Nov '25","Dec '25","Jan '26","Feb '26","Mar '26","Apr '26","May '26","Jun '26","Jul '26","Aug '26"];
+
+var overallRaw = {
+  spend:[480,510,440,390,420,460,500,530,400,470,490,510],
+  apps:[3400,3600,3100,2900,3200,3500,3700,3900,3300,3500,3600,3800],
+  certs:[1950,2100,1800,1650,1900,2050,2200,2400,1900,2000,2150,2300],
+  prem:[195,210,180,165,188,205,220,240,195,208,218,235]
+};
+var od = {
+  cpa: overallRaw.spend.map(function(s,i){return Math.round(s*1000/overallRaw.certs[i]);}),
+  aap: overallRaw.prem.map(function(p,i){return Math.round(p*1000/overallRaw.certs[i]);}),
+  payrate: overallRaw.apps.map(function(a,i){return Math.round(overallRaw.certs[i]/a*100);})
+};
+
+var products = [
+  { key:'ADD',  label:'AD&D',          color:'#3266ad', spend:[42,45,38,34,40,43,46,50,38,42,44,47], apps:[1900,2000,1700,1580,1750,1900,2050,2200,1800,1950,2050,2150], certs:[1350,1450,1240,1130,1280,1380,1500,1580,1280,1380,1450,1520], prem:[54,58,50,45,51,55,60,63,51,55,58,61] },
+  { key:'GTL',  label:'GTL',           color:'#1D9E75', spend:[52,55,47,42,48,53,57,62,50,54,56,59], apps:[620,660,580,540,590,635,680,720,600,640,665,700], certs:[270,295,250,230,262,280,300,320,262,278,295,310], prem:[42,45,39,35,41,44,47,50,41,44,46,48] },
+  { key:'GIL',  label:'GIL',           color:'#BA7517', spend:[88,93,80,71,82,89,96,104,84,90,93,98], apps:[430,455,395,370,405,435,465,495,415,440,455,475], certs:[228,245,208,193,215,230,248,265,220,234,245,256], prem:[60,64,55,50,57,62,67,71,59,63,66,70] },
+  { key:'LPGT', label:'Level premium',  color:'#993556', spend:[155,163,142,127,148,158,170,184,150,160,165,173], apps:[230,245,210,196,215,232,248,265,222,235,244,255], certs:[65,70,60,55,64,69,74,79,64,68,72,76], prem:[27,29,25,22,26,28,30,32,26,28,29,31] },
+  { key:'AI',   label:'AI',            color:'#534AB7', spend:[67,70,61,55,65,70,75,82,66,71,74,78], apps:[220,240,216,214,240,298,257,220,263,235,186,220], certs:[37,40,42,42,79,91,78,156,74,40,88,138], prem:[12,13,11,10,12,13,14,15,12,13,13,14] }
+];
+
+function getKpiData(p, kpi) {
+  if (kpi==='spend')   return p.spend;
+  if (kpi==='apps')    return p.apps;
+  if (kpi==='certs')   return p.certs;
+  if (kpi==='prem')    return p.prem;
+  if (kpi==='cpa')     return p.spend.map(function(s,i){ return p.certs[i]?Math.round(s*1000/p.certs[i]):null; });
+  if (kpi==='aap')     return p.prem.map(function(v,i){ return p.certs[i]?Math.round(v*1000/p.certs[i]):null; });
+  if (kpi==='payrate') return p.apps.map(function(a,i){ return a?Math.round(p.certs[i]/a*100):null; });
+  return [];
+}
+
+function kpiLabel(kpi) {
+  return {spend:'Spend ($K)',apps:'Applications',certs:'Certs issued',prem:'Gross prem ($K)',cpa:'CPA ($)',aap:'AAP ($)',payrate:'Pay rate (%)'}[kpi]||kpi;
+}
+
+function fmtKpi(v, kpi) {
+  if (v===null||v===undefined) return '—';
+  if (kpi==='spend'||kpi==='prem') return '$'+v+'K';
+  if (kpi==='cpa'||kpi==='aap') return '$'+v;
+  if (kpi==='payrate') return v+'%';
+  return v.toLocaleString();
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if (name==='channel' && !channelDrawn) { drawChannel(); channelDrawn=true; }
+  if (name==='monthly' && !monthlyInited) { initMonthly(); monthlyInited=true; }
+  if (name==='prodtrend') { setTimeout(renderProdTrend, 50); }
+}
+
+new Chart(document.getElementById('prodChart'), {
+  type:'bar',
+  data:{
+    labels:['AI','AD&D','GTL','GIL','Level prem'],
+    datasets:[
+      { label:'Spend ($K)', data:[400,250,300,500,900], backgroundColor:'#3266ad', barPercentage:0.35, categoryPercentage:0.65 },
+      { label:'Gross prem ($K)', data:[0,629,771,731,324], backgroundColor:'#1D9E75', barPercentage:0.35, categoryPercentage:0.65 }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{
+      x:{ ticks:{font:{size:11},color:'#888780'}, grid:{display:false} },
+      y:{ ticks:{font:{size:11},color:'#888780',callback:function(v){return '$'+v+'K';}}, grid:{color:'rgba(136,135,128,0.15)'} }
+    }
+  }
+});
+
+function drawChannel() {
+  new Chart(document.getElementById('channelChart'),{
+    type:'bar',
+    data:{
+      labels:['Acquisition (DM)','Xsell (Pearl)'],
+      datasets:[
+        { label:'Applications', data:[21214,20262], backgroundColor:'#3266ad', barPercentage:0.5 },
+        { label:'Certs issued', data:[12932,11142], backgroundColor:'#1D9E75', barPercentage:0.5 },
+        { label:'Gross prem ($K)', data:[904,1551], backgroundColor:'#BA7517', barPercentage:0.5 }
+      ]
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ ticks:{font:{size:11},color:'#888780'}, grid:{color:'rgba(136,135,128,0.15)'} },
+        y:{ ticks:{font:{size:11},color:'#888780'}, grid:{display:false} }
+      }
+    }
+  });
+}
+
+var kpiDefs = [
+  {key:'spend',   label:'Spend ($K)',      color:'#3266ad', data:overallRaw.spend,    yID:'y',  fmt:function(v){return '$'+v+'K';}},
+  {key:'certs',   label:'Certs issued',    color:'#1D9E75', data:overallRaw.certs,    yID:'y',  fmt:function(v){return v.toLocaleString();}},
+  {key:'apps',    label:'Applications',    color:'#BA7517', data:overallRaw.apps,     yID:'y',  fmt:function(v){return v.toLocaleString();}},
+  {key:'prem',    label:'Gross prem ($K)', color:'#993556', data:overallRaw.prem,     yID:'y2', fmt:function(v){return '$'+v+'K';}},
+  {key:'cpa',     label:'CPA ($)',         color:'#534AB7', data:od.cpa,              yID:'y2', fmt:function(v){return '$'+v;}},
+  {key:'aap',     label:'AAP ($)',         color:'#854F0B', data:od.aap,              yID:'y2', fmt:function(v){return '$'+v;}},
+  {key:'payrate', label:'Pay rate (%)',    color:'#0F6E56', data:od.payrate,          yID:'y2', fmt:function(v){return v+'%';}}
+];
+
+var activeKPIs = {spend:true,certs:true,prem:false,apps:false,cpa:false,aap:false,payrate:false};
+
+function buildMonthlyTable() {
+  var tbody = document.getElementById('monthlyTableBody');
+  var rows = months.map(function(m,i){
+    return '<tr><td>'+m+'</td><td>$'+overallRaw.spend[i]+'K</td><td>'+overallRaw.apps[i].toLocaleString()+'</td><td>'+overallRaw.certs[i].toLocaleString()+'</td><td>'+od.payrate[i]+'%</td><td>$'+overallRaw.prem[i]+'K</td><td>$'+od.cpa[i]+'</td><td>$'+od.aap[i]+'</td></tr>';
+  });
+  var tS=overallRaw.spend.reduce(function(a,b){return a+b;},0);
+  var tA=overallRaw.apps.reduce(function(a,b){return a+b;},0);
+  var tC=overallRaw.certs.reduce(function(a,b){return a+b;},0);
+  var tP=overallRaw.prem.reduce(function(a,b){return a+b;},0);
+  rows.push('<tr class="total-row"><td>Total / avg</td><td>$'+tS+'K</td><td>'+tA.toLocaleString()+'</td><td>'+tC.toLocaleString()+'</td><td>'+Math.round(tC/tA*100)+'%</td><td>$'+tP+'K</td><td>$'+Math.round(tS*1000/tC)+'</td><td>$'+Math.round(tP*1000/tC)+'</td></tr>');
+  tbody.innerHTML = rows.join('');
+}
+
+function buildToggles() {
+  var wrap = document.getElementById('kpiToggles');
+  wrap.innerHTML = '';
+  kpiDefs.forEach(function(k){
+    var btn = document.createElement('button');
+    var on = activeKPIs[k.key];
+    btn.className = 'toggle-btn'+(on?' on':'');
+    btn.style.borderColor = on?k.color:'';
+    btn.style.color = on?k.color:'';
+    btn.textContent = k.label;
+    btn.onclick = function(){ activeKPIs[k.key]=!activeKPIs[k.key]; buildToggles(); rebuildMonthly(); };
+    wrap.appendChild(btn);
+  });
+}
+
+function buildDatasets() {
+  return kpiDefs.filter(function(k){return activeKPIs[k.key];}).map(function(k){
+    return {label:k.label,data:k.data,borderColor:k.color,backgroundColor:k.color+'15',
+      pointRadius:3,tension:0.35,fill:false,yAxisID:k.yID,borderDash:k.yID==='y2'?[4,3]:[]};
+  });
+}
+
+function initMonthly() {
+  buildToggles();
+  buildMonthlyTable();
+  monthlyChart = new Chart(document.getElementById('monthlyChart'),{
+    type:'line',
+    data:{labels:months,datasets:buildDatasets()},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:function(ctx){
+          var def=kpiDefs.find(function(k){return k.label===ctx.dataset.label;});
+          return ' '+ctx.dataset.label+': '+(def?def.fmt(ctx.parsed.y):ctx.parsed.y);
+        }}}
+      },
+      scales:{
+        x:{ticks:{font:{size:10},color:'#888780',maxRotation:40,autoSkip:false},grid:{color:'rgba(136,135,128,0.12)'}},
+        y:{position:'left',ticks:{font:{size:11},color:'#888780'},grid:{color:'rgba(136,135,128,0.12)'}},
+        y2:{position:'right',ticks:{font:{size:11},color:'#888780'},grid:{display:false}}
+      }
+    }
+  });
+}
+
+function rebuildMonthly() {
+  if (!monthlyChart) return;
+  monthlyChart.data.datasets = buildDatasets();
+  monthlyChart.update();
+}
+
+function buildProdLegend(prods) {
+  document.getElementById('prodLegend').innerHTML = prods.map(function(p){
+    return '<span><span class="legend-swatch" style="background:'+p.color+'"></span>'+p.label+'</span>';
+  }).join('');
+}
+
+function buildProdTrendTable(prods, kpi) {
+  var mode = document.getElementById('prodTrendMode').value;
+  document.getElementById('prodTrendTableLabel').textContent = 'Monthly detail — '+(mode==='compare'?'all products':prods[0].label);
+  var thead = document.getElementById('prodTrendTableHead');
+  var tbody = document.getElementById('prodTrendTableBody');
+  if (mode==='compare') {
+    thead.innerHTML = '<tr><th>Month</th>'+prods.map(function(p){return '<th>'+p.label+'</th>';}).join('')+'</tr>';
+    tbody.innerHTML = months.map(function(m,i){
+      return '<tr><td>'+m+'</td>'+prods.map(function(p){return '<td>'+fmtKpi(getKpiData(p,kpi)[i],kpi)+'</td>';}).join('')+'</tr>';
+    }).join('');
+  } else {
+    var p = prods[0];
+    thead.innerHTML = '<tr><th>Month</th><th>Spend ($K)</th><th>Apps</th><th>Certs</th><th>Pay rate</th><th>Gross prem ($K)</th><th>CPA ($)</th><th>AAP ($)</th></tr>';
+    tbody.innerHTML = months.map(function(m,i){
+      var cpa=p.certs[i]?Math.round(p.spend[i]*1000/p.certs[i]):'—';
+      var aap=p.certs[i]?Math.round(p.prem[i]*1000/p.certs[i]):'—';
+      var pr=p.apps[i]?Math.round(p.certs[i]/p.apps[i]*100)+'%':'—';
+      return '<tr><td>'+m+'</td><td>$'+p.spend[i]+'K</td><td>'+p.apps[i].toLocaleString()+'</td><td>'+p.certs[i].toLocaleString()+'</td><td>'+pr+'</td><td>$'+p.prem[i]+'K</td><td>$'+cpa+'</td><td>$'+aap+'</td></tr>';
+    }).join('');
+  }
+}
+
+function renderProdTrend() {
+  var kpi  = document.getElementById('prodTrendKpi').value;
+  var mode = document.getElementById('prodTrendMode').value;
+  var prods = mode==='compare'?products:products.filter(function(p){return p.key===mode;});
+  buildProdLegend(prods);
+  buildProdTrendTable(prods, kpi);
+  var datasets = prods.map(function(p){
+    return {label:p.label,data:getKpiData(p,kpi),borderColor:p.color,
+      backgroundColor:p.color+'18',pointRadius:3,tension:0.35,fill:false};
+  });
+  if (prodTrendChart) {
+    prodTrendChart.data.datasets = datasets;
+    prodTrendChart.options.scales.y.title.text = kpiLabel(kpi);
+    prodTrendChart.update();
+  } else {
+    prodTrendChart = new Chart(document.getElementById('prodTrendChart'),{
+      type:'line',
+      data:{labels:months,datasets:datasets},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{label:function(ctx){
+            return ' '+ctx.dataset.label+': '+fmtKpi(ctx.parsed.y, document.getElementById('prodTrendKpi').value);
+          }}}
+        },
+        scales:{
+          x:{ticks:{font:{size:10},color:'#888780',maxRotation:40,autoSkip:false},grid:{color:'rgba(136,135,128,0.12)'}},
+          y:{ticks:{font:{size:11},color:'#888780'},grid:{color:'rgba(136,135,128,0.12)'},
+            title:{display:true,text:kpiLabel(kpi),font:{size:11},color:'#888780'}}
+        }
+      }
+    });
+  }
+}
+</script>
+</body>
+</html>
