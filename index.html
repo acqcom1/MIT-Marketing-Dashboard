@@ -65,7 +65,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 <div class="page">
 
 <div class="page-title">FY26 Marketing Dashboard</div>
-<div class="page-sub">YTD through April 2026 &nbsp;·&nbsp; Fiscal year Sep '25 – Aug '26</div>
+<div class="page-sub">YTD through April 2026 &nbsp;&middot;&nbsp; Fiscal year Sep '25 – Aug '26</div>
 
 <div class="section-label">YTD summary</div>
 <div class="kpi-grid">
@@ -123,26 +123,94 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
 <!-- BY CHANNEL -->
 <div id="panel-channel" class="panel">
+
+  <div class="section-label">Summary — by channel</div>
   <div class="legend-row">
-    <span><span class="legend-swatch" style="background:#3266ad;"></span>Applications</span>
-    <span><span class="legend-swatch" style="background:#1D9E75;"></span>Certs issued</span>
-    <span><span class="legend-swatch" style="background:#BA7517;"></span>Gross prem ($K)</span>
+    <span><span class="legend-swatch" style="background:#3266ad;"></span>Acquisition (DM)</span>
+    <span><span class="legend-swatch" style="background:#1D9E75;"></span>Xsell (Pearl)</span>
   </div>
-  <div class="scroll-x">
-    <div style="position:relative;height:160px;min-width:400px;">
-      <canvas id="channelChart" role="img" aria-label="Horizontal grouped bar chart comparing channels"></canvas>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1.5rem;">
+    <div style="background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;padding:12px 14px;">
+      <div style="font-size:11px;font-weight:500;color:#888780;margin-bottom:8px;">Certs issued</div>
+      <div style="position:relative;height:140px;"><canvas id="sumChartCerts" role="img" aria-label="Certs by channel"></canvas></div>
+    </div>
+    <div style="background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;padding:12px 14px;">
+      <div style="font-size:11px;font-weight:500;color:#888780;margin-bottom:8px;">Gross prem ($K)</div>
+      <div style="position:relative;height:140px;"><canvas id="sumChartPrem" role="img" aria-label="Gross prem by channel"></canvas></div>
+    </div>
+    <div style="background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;padding:12px 14px;">
+      <div style="font-size:11px;font-weight:500;color:#888780;margin-bottom:8px;">Applications</div>
+      <div style="position:relative;height:140px;"><canvas id="sumChartApps" role="img" aria-label="Applications by channel"></canvas></div>
+    </div>
+    <div style="background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;padding:12px 14px;">
+      <div style="font-size:11px;font-weight:500;color:#888780;margin-bottom:8px;">Spend ($K)</div>
+      <div style="position:relative;height:140px;"><canvas id="sumChartSpend" role="img" aria-label="Spend by channel"></canvas></div>
     </div>
   </div>
-  <div class="scroll-x" style="margin-top:1rem;">
-    <table class="data-table">
-      <thead><tr><th>Channel</th><th>Spend</th><th>Apps</th><th>Certs</th><th>Pay rate</th><th>Gross prem</th><th>CPA</th><th>AAP</th></tr></thead>
-      <tbody>
-        <tr><td>Acquisition (DM)</td><td>—</td><td>21,214</td><td>12,932</td><td>61%</td><td>$904,177</td><td>$70</td><td>$70</td></tr>
-        <tr><td>Xsell (Pearl)</td><td>—</td><td>20,262</td><td>11,142</td><td>55%</td><td>$1,551,130</td><td>$139</td><td>$139</td></tr>
-        <tr><td class="na">Organic / Digital</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td></tr>
-        <tr class="total-row"><td>Total</td><td>$2,350,000</td><td>41,476</td><td>24,074</td><td>58%</td><td>$2,455,307</td><td>$98</td><td>$102</td></tr>
-      </tbody>
-    </table>
+
+  <hr class="sub-divider">
+  <div class="section-label">Detail — by channel &amp; product</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+    <label style="font-size:11px;color:#888780;">Chart metric</label>
+    <select id="chanKpi" onchange="rebuildChanCharts()" style="font-size:11px;padding:4px 8px;border-radius:8px;border:0.5px solid rgba(0,0,0,0.15);background:#f0f2f8;color:#1a1a18;cursor:pointer;">
+      <option value="certs">Certs issued</option>
+      <option value="apps">Applications</option>
+      <option value="spend">Spend ($K)</option>
+      <option value="prem">Gross prem ($K)</option>
+      <option value="cpa">CPA ($)</option>
+      <option value="aap">AAP ($)</option>
+      <option value="payrate">Pay rate (%)</option>
+    </select>
+  </div>
+
+  <div style="margin-bottom:2rem;">
+    <div style="font-size:13px;font-weight:500;padding:8px 12px;background:#003087;color:#fff;border-radius:6px;margin-bottom:12px;">Acquisition (DM)</div>
+    <div class="legend-row" id="chanLegendAcq"></div>
+    <div class="scroll-x">
+      <div style="position:relative;height:180px;min-width:400px;">
+        <canvas id="chanChartAcq" role="img" aria-label="Acquisition channel by product"></canvas>
+      </div>
+    </div>
+    <div class="scroll-x" style="margin-top:1rem;">
+      <table class="data-table" style="min-width:820px;">
+        <thead><tr><th>Product</th><th>Spend</th><th>Apps</th><th>Certs</th><th>Pay rate</th><th>Gross prem</th><th>CPA</th><th>AAP</th><th>Goal (certs)</th><th>% to goal</th></tr></thead>
+        <tbody id="chanTableAcq"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="margin-bottom:2rem;">
+    <div style="font-size:13px;font-weight:500;padding:8px 12px;background:#003087;color:#fff;border-radius:6px;margin-bottom:12px;">Xsell (Pearl)</div>
+    <div class="legend-row" id="chanLegendXsell"></div>
+    <div class="scroll-x">
+      <div style="position:relative;height:180px;min-width:400px;">
+        <canvas id="chanChartXsell" role="img" aria-label="Xsell channel by product"></canvas>
+      </div>
+    </div>
+    <div class="scroll-x" style="margin-top:1rem;">
+      <table class="data-table" style="min-width:820px;">
+        <thead><tr><th>Product</th><th>Spend</th><th>Apps</th><th>Certs</th><th>Pay rate</th><th>Gross prem</th><th>CPA</th><th>AAP</th><th>Goal (certs)</th><th>% to goal</th></tr></thead>
+        <tbody id="chanTableXsell"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1rem;">
+    <div style="font-size:13px;font-weight:500;padding:8px 12px;background:#003087;color:#fff;border-radius:6px;margin-bottom:12px;">Organic / Digital</div>
+    <div class="scroll-x">
+      <table class="data-table" style="min-width:820px;">
+        <thead><tr><th>Product</th><th>Spend</th><th>Apps</th><th>Certs</th><th>Pay rate</th><th>Gross prem</th><th>CPA</th><th>AAP</th><th>Goal (certs)</th><th>% to goal</th></tr></thead>
+        <tbody>
+          <tr><td class="na">AI</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td></tr>
+          <tr><td class="na">AD&amp;D</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td></tr>
+          <tr><td class="na">GTL</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td></tr>
+          <tr><td class="na">GIL</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td></tr>
+          <tr><td class="na">Level premium</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td></tr>
+          <tr class="total-row"><td class="na">Total</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td><td class="na">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:10px;color:#888780;margin-top:8px;">No data available for this channel yet.</div>
   </div>
 </div>
 
@@ -287,26 +355,157 @@ new Chart(document.getElementById('prodChart'), {
   }
 });
 
-function drawChannel() {
-  new Chart(document.getElementById('channelChart'),{
+var chanChartAcqInst = null, chanChartXsellInst = null;
+var chanProds = ['AI','AD&D','GTL','GIL','Level prem'];
+var chanProdColors = ['#534AB7','#3266ad','#1D9E75','#BA7517','#993556'];
+var chanChannels = ['Acquisition (DM)','Xsell (Pearl)'];
+var chanChanColors = ['#3266ad','#1D9E75'];
+
+var chanData = {
+  acq: {
+    spend:     [50000,130000,160000,80000,380000],
+    apps:      [2,13469,6560,761,424],
+    certs:     [1,9143,3230,414,145],
+    prem:      [0.1,329,407,104,64],
+    goalCerts: [2,13000,4800,620,220]
+  },
+  xsell: {
+    spend:     [20000,80000,100000,180000,340000],
+    apps:      [1,9125,4287,4505,2342],
+    certs:     [1,6626,1517,2363,634],
+    prem:      [0.1,299,364,627,260],
+    goalCerts: [2,9800,2200,3400,950]
+  }
+};
+
+function chanDerived(d) {
+  return {
+    cpa:     d.spend.map(function(s,i){ return d.certs[i]>0?Math.round(s/d.certs[i]):null; }),
+    aap:     d.prem.map(function(p,i){ return d.certs[i]>0?Math.round(p*1000/d.certs[i]):null; }),
+    payrate: d.apps.map(function(a,i){ return a>0?Math.round(d.certs[i]/a*100):null; })
+  };
+}
+
+function getChanKpiData(d, der, kpi) {
+  if (kpi==='spend')   return d.spend.map(function(v){return Math.round(v/1000);});
+  if (kpi==='apps')    return d.apps;
+  if (kpi==='certs')   return d.certs;
+  if (kpi==='prem')    return d.prem;
+  if (kpi==='cpa')     return der.cpa.map(function(v){return v===null?0:v;});
+  if (kpi==='aap')     return der.aap.map(function(v){return v===null?0:v;});
+  if (kpi==='payrate') return der.payrate.map(function(v){return v===null?0:v;});
+  return [];
+}
+
+function buildChanLegend(elId) {
+  document.getElementById(elId).innerHTML = chanProds.map(function(p,i){
+    return '<span><span class="legend-swatch" style="background:'+chanProdColors[i]+'"></span>'+p+'</span>';
+  }).join('');
+}
+
+function pctCell(val, goal) {
+  if (!goal) return '<td style="color:#b4b2a9;">—</td>';
+  var p = Math.round(val/goal*100);
+  var col = p >= 67 ? '#3B6D11' : '#A32D2D';
+  return '<td style="color:'+col+';font-weight:500;">'+p+'%</td>';
+}
+
+function buildChanTable(tbodyId, d, der) {
+  var rows = chanProds.map(function(p,i){
+    var pr  = d.apps[i]>0 ? Math.round(d.certs[i]/d.apps[i]*100)+'%' : '—';
+    var cpa = der.cpa[i]!==null ? '$'+der.cpa[i].toLocaleString() : '—';
+    var aap = der.aap[i]!==null ? '$'+der.aap[i] : '—';
+    return '<tr>'+
+      '<td>'+p+'</td>'+
+      '<td>$'+d.spend[i].toLocaleString()+'</td>'+
+      '<td>'+d.apps[i].toLocaleString()+'</td>'+
+      '<td>'+d.certs[i].toLocaleString()+'</td>'+
+      '<td>'+pr+'</td>'+
+      '<td>$'+Math.round(d.prem[i])+'K</td>'+
+      '<td>'+cpa+'</td>'+
+      '<td>'+aap+'</td>'+
+      '<td>'+d.goalCerts[i].toLocaleString()+'</td>'+
+      pctCell(d.certs[i], d.goalCerts[i])+
+      '</tr>';
+  });
+  var tC=d.certs.reduce(function(a,b){return a+b;},0);
+  var tA=d.apps.reduce(function(a,b){return a+b;},0);
+  var tS=d.spend.reduce(function(a,b){return a+b;},0);
+  var tP=d.prem.reduce(function(a,b){return a+b;},0);
+  var tG=d.goalCerts.reduce(function(a,b){return a+b;},0);
+  rows.push('<tr class="total-row">'+
+    '<td>Total</td>'+
+    '<td>$'+tS.toLocaleString()+'</td>'+
+    '<td>'+tA.toLocaleString()+'</td>'+
+    '<td>'+tC.toLocaleString()+'</td>'+
+    '<td>'+(tA>0?Math.round(tC/tA*100)+'%':'—')+'</td>'+
+    '<td>$'+Math.round(tP)+'K</td>'+
+    '<td>'+(tC>0?'$'+Math.round(tS/tC):'—')+'</td>'+
+    '<td>'+(tC>0?'$'+Math.round(tP*1000/tC):'—')+'</td>'+
+    '<td>'+tG.toLocaleString()+'</td>'+
+    pctCell(tC,tG)+
+    '</tr>');
+  document.getElementById(tbodyId).innerHTML = rows.join('');
+}
+
+function makeSumChart(id, acqVal, xsellVal) {
+  new Chart(document.getElementById(id),{
     type:'bar',
     data:{
-      labels:['Acquisition (DM)','Xsell (Pearl)'],
-      datasets:[
-        { label:'Applications', data:[21214,20262], backgroundColor:'#3266ad', barPercentage:0.5 },
-        { label:'Certs issued', data:[12932,11142], backgroundColor:'#1D9E75', barPercentage:0.5 },
-        { label:'Gross prem ($K)', data:[904,1551], backgroundColor:'#BA7517', barPercentage:0.5 }
-      ]
+      labels: chanChannels,
+      datasets:[{ data:[acqVal,xsellVal], backgroundColor:chanChanColors, barPercentage:0.45, categoryPercentage:0.6, borderWidth:0 }]
     },
     options:{
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:false} },
       scales:{
-        x:{ ticks:{font:{size:11},color:'#888780'}, grid:{color:'rgba(136,135,128,0.15)'} },
-        y:{ ticks:{font:{size:11},color:'#888780'}, grid:{display:false} }
+        x:{ticks:{font:{size:11},color:'#888780'},grid:{display:false}},
+        y:{ticks:{font:{size:11},color:'#888780'},grid:{color:'rgba(136,135,128,0.15)'}}
       }
     }
   });
+}
+
+function sum(arr){ return arr.reduce(function(a,b){return a+b;},0); }
+
+function rebuildChanCharts() {
+  var kpi = document.getElementById('chanKpi').value;
+  var acqDer = chanDerived(chanData.acq);
+  var xsellDer = chanDerived(chanData.xsell);
+  var opts = {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{
+      x:{ticks:{font:{size:11},color:'#888780'},grid:{display:false}},
+      y:{ticks:{font:{size:11},color:'#888780'},grid:{color:'rgba(136,135,128,0.15)'}}
+    }
+  };
+  if (chanChartAcqInst) chanChartAcqInst.destroy();
+  chanChartAcqInst = new Chart(document.getElementById('chanChartAcq'),{
+    type:'bar',
+    data:{ labels:chanProds, datasets:[{ data:getChanKpiData(chanData.acq,acqDer,kpi), backgroundColor:chanProdColors, barPercentage:0.5, categoryPercentage:0.7, borderWidth:0 }] },
+    options: opts
+  });
+  if (chanChartXsellInst) chanChartXsellInst.destroy();
+  chanChartXsellInst = new Chart(document.getElementById('chanChartXsell'),{
+    type:'bar',
+    data:{ labels:chanProds, datasets:[{ data:getChanKpiData(chanData.xsell,xsellDer,kpi), backgroundColor:chanProdColors, barPercentage:0.5, categoryPercentage:0.7, borderWidth:0 }] },
+    options: opts
+  });
+}
+
+function drawChannel() {
+  var acqDer = chanDerived(chanData.acq);
+  var xsellDer = chanDerived(chanData.xsell);
+  makeSumChart('sumChartCerts', sum(chanData.acq.certs),  sum(chanData.xsell.certs));
+  makeSumChart('sumChartPrem',  sum(chanData.acq.prem),   sum(chanData.xsell.prem));
+  makeSumChart('sumChartApps',  sum(chanData.acq.apps),   sum(chanData.xsell.apps));
+  makeSumChart('sumChartSpend', sum(chanData.acq.spend.map(function(v){return Math.round(v/1000);})), sum(chanData.xsell.spend.map(function(v){return Math.round(v/1000);})));
+  buildChanLegend('chanLegendAcq');
+  buildChanLegend('chanLegendXsell');
+  buildChanTable('chanTableAcq', chanData.acq, acqDer);
+  buildChanTable('chanTableXsell', chanData.xsell, xsellDer);
+  rebuildChanCharts();
 }
 
 var kpiDefs = [
